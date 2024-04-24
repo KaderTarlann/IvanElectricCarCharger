@@ -36,11 +36,15 @@ public class ChargeTimes {
 "2023-12-11T00:00:00","11:30","2023-12-11T00:00:00",23,1333,6488,2417,15595
      */
         String input = new SimpleHttpClient().readUrl(url);
+        System.out.println(reportWind(input));
+    }
+
+    static String reportWind(String input) throws IOException, CsvException {
         List<String[]> forecastRows;
         try (CSVReader csvReader = new CSVReader(new StringReader(input))) {
             forecastRows = csvReader.readAll();
         }
-        System.out.println("Best times to plug in:\n" +
+        return "Best times to plug in:\n" +
                 forecastRows.stream().skip(1)
                         .sorted(comparingInt(row -> -parseInt(row[4])))
                         .limit(3)
@@ -50,6 +54,25 @@ public class ChargeTimes {
                                 ZoneId.of("GMT")))
                         .sorted()
                         .map((zonedDateTime) -> zonedDateTime.format(RFC_1123_DATE_TIME))
-                        .collect(Collectors.joining("\n")));
+                        .collect(Collectors.joining("\n"));
+    }
+
+
+    static String reportSolarAndWind(String input) throws IOException, CsvException {
+        List<String[]> forecastRows;
+        try (CSVReader csvReader = new CSVReader(new StringReader(input))) {
+            forecastRows = csvReader.readAll();
+        }
+        return "Best times to plug in:\n" +
+                forecastRows.stream().skip(1)
+                        .sorted(comparingInt(row -> -parseInt(row[4] + row[6])))
+                        .limit(3)
+                        .map(row -> ZonedDateTime.of(parse(row[0])
+                                        .withHour(parseInt(row[1].split(":")[0]))
+                                        .withMinute(parseInt(row[1].split(":")[1])),
+                                ZoneId.of("GMT")))
+                        .sorted()
+                        .map((zonedDateTime) -> zonedDateTime.format(RFC_1123_DATE_TIME))
+                        .collect(Collectors.joining("\n"));
     }
 }
